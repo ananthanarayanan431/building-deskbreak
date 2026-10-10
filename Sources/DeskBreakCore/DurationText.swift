@@ -16,6 +16,13 @@ public enum DurationText {
         }
     }
 
+    /// Exact text for a configured length, e.g. "15 s", "10 min". Unlike `short`, it shows seconds.
+    public static func setting(_ seconds: TimeInterval) -> String {
+        guard seconds.isFinite, seconds > 0 else { return "0 s" }
+        if seconds < 60 { return "\(Int(seconds)) s" }
+        return short(seconds)
+    }
+
     /// Converts a `Duration` (as produced by `SuspendingClock`) to seconds.
     public static func seconds(_ duration: Duration) -> TimeInterval {
         let (seconds, attoseconds) = duration.components

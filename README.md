@@ -45,7 +45,7 @@ When a reminder fires, answer it from the notification's **Options** menu:
 | I did | done |
 | Not doing | skipped |
 | Remind me in 15 min | the answer to the follow-up, which returns after 15 minutes of active time |
-| No answer within 10 minutes, the X, or clicking the notification body | missed |
+| No answer within 15 seconds, the X, or clicking the notification body | missed |
 
 ## Settings
 
@@ -56,7 +56,7 @@ Changes apply immediately. **Restore defaults** resets every value.
 | Water every | 1 h | 15 min – 8 h, in 15-minute steps |
 | Walk every | 2 h | 15 min – 8 h, in 15-minute steps |
 | Snooze for | 15 min | 1 – 60 min |
-| Answer within (response window) | 10 min | 1 – 30 min |
+| Answer within (response window) | 15 s | 15 s – 30 min |
 | Away after (idle threshold) | 15 min | 1 – 60 min |
 | Launch at login | off | |
 
@@ -81,10 +81,16 @@ With only the Command Line Tools installed (no Xcode), SwiftPM may not find the 
 
 ```sh
 F=/Library/Developer/CommandLineTools/Library/Developer/Frameworks
-swift test -Xswiftc -F -Xswiftc "$F" -Xlinker -F -Xlinker "$F" -Xlinker -rpath -Xlinker "$F"
+L=/Library/Developer/CommandLineTools/Library/Developer/usr/lib
+swift test -Xswiftc -F -Xswiftc "$F" -Xlinker -F -Xlinker "$F" \
+  -Xlinker -rpath -Xlinker "$F" -Xlinker -rpath -Xlinker "$L"
 ```
 
-Shortcuts are in the `Makefile`: `make build`, `make app`, `make test`, `make clean`.
+Shortcuts are in the `Makefile`: `make build`, `make app`, `make test` (adds the paths above automatically when Xcode is not installed), `make clean`.
+
+### Install and update a local build
+
+Installing a build into `/Applications` (needed for launch at login) and updating it after a code change are covered in [deploy.md](deploy.md).
 
 ## How it works
 
@@ -96,7 +102,7 @@ Shortcuts are in the `Makefile`: `make build`, `make app`, `make test`, `make cl
 
 - A regular timer restarts the moment its reminder fires, whatever the answer.
 - If the next regular reminder of the same kind fires while a snooze is pending, the snooze is cancelled and that earlier reminder is recorded as missed.
-- No answer within the response window (default 10 minutes), closing with the X, or clicking the notification without choosing a button records **missed** and removes the notification.
+- No answer within the response window (default 15 seconds), closing with the X, or clicking the notification without choosing a button records **missed** and removes the notification.
 - Daily counts go by the day the reminder fired, so a reminder fired at 23:55 and answered at 00:05 counts for the earlier day.
 - Timer state is saved continuously, so quitting or restarting resumes from the remaining time.
 - "Pause for 1 hour" runs on wall-clock time. If the Mac sleeps through the pause, the pause has ended when it wakes.
@@ -186,7 +192,7 @@ Then remove DeskBreak from **System Settings → General → Login Items** if it
 | Problem | Fix |
 | --- | --- |
 | No reminders appear | Check that notifications are allowed for DeskBreak in System Settings → Notifications, and that no Focus mode is on. |
-| Reminders vanish before I answer | Set the notification style to **Alerts**, not **Banners**. |
+| Reminders vanish before I answer | Set the notification style to **Alerts**, not **Banners**. Unanswered reminders are also removed when **Answer within** runs out (15 seconds by default); raise it in Settings for more time. |
 | Only one button is visible | macOS shows the three buttons under **Options** on the alert. |
 | Launch at login stopped working after an upgrade | Turn **Launch at login** off and on again in Settings. |
 | Running the binary prints "must run from DeskBreak.app" | Build the bundle with `scripts/build-app.sh` and open the `.app`. |

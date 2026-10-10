@@ -24,7 +24,7 @@ struct SettingsView: View {
                 minutesStepper("Water every", \.waterInterval, range: ReminderSettings.intervalRange, step: 15)
                 minutesStepper("Walk every", \.walkInterval, range: ReminderSettings.intervalRange, step: 15)
                 minutesStepper("Snooze for", \.snoozeLength, range: ReminderSettings.snoozeRange, step: 5)
-                minutesStepper("Answer within", \.responseWindow, range: ReminderSettings.responseWindowRange, step: 1)
+                choiceStepper("Answer within", \.responseWindow, choices: ReminderSettings.responseWindowChoices)
                 minutesStepper("Away after", \.idleThreshold, range: ReminderSettings.idleThresholdRange, step: 1)
             }
 
@@ -74,6 +74,37 @@ struct SettingsView: View {
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
             }
+        }
+    }
+
+    /// Steps through a fixed list of values, for settings whose useful values aren't evenly spaced.
+    private func choiceStepper(
+        _ title: String,
+        _ keyPath: WritableKeyPath<ReminderSettings, TimeInterval>,
+        choices: [TimeInterval]
+    ) -> some View {
+        let value = controller.settings[keyPath: keyPath]
+        // A saved value between choices steps to its nearest neighbour in each direction.
+        let lower = choices.last { $0 < value }
+        let higher = choices.first { $0 > value }
+        func set(_ newValue: TimeInterval?) {
+            guard let newValue else { return }
+            var updated = controller.settings
+            updated[keyPath: keyPath] = newValue
+            controller.updateSettings(updated)
+        }
+        return Stepper {
+            HStack {
+                Text(title)
+                Spacer()
+                Text(DurationText.setting(value))
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+            }
+        } onIncrement: {
+            set(higher)
+        } onDecrement: {
+            set(lower)
         }
     }
 }

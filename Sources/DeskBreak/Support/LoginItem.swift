@@ -14,9 +14,10 @@ enum LoginItem {
     static var state: State {
         switch SMAppService.mainApp.status {
         case .enabled: .enabled
-        case .notRegistered: .disabled
+        // `.notFound` is also what an app that has never registered reports, so it stays toggleable;
+        // if registering really fails, `setLaunchAtLogin` surfaces the error.
+        case .notRegistered, .notFound: .disabled
         case .requiresApproval: .requiresApproval
-        case .notFound: .unavailable
         @unknown default: .unavailable
         }
     }

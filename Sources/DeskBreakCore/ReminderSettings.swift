@@ -12,13 +12,15 @@ public struct ReminderSettings: Codable, Equatable, Sendable {
         waterInterval: 60 * 60,
         walkInterval: 2 * 60 * 60,
         snoozeLength: 15 * 60,
-        responseWindow: 10 * 60,
+        responseWindow: 15,
         idleThreshold: 15 * 60
     )
 
     public static let intervalRange: ClosedRange<TimeInterval> = (15 * 60)...(8 * 60 * 60)
     public static let snoozeRange: ClosedRange<TimeInterval> = (1 * 60)...(60 * 60)
-    public static let responseWindowRange: ClosedRange<TimeInterval> = (1 * 60)...(30 * 60)
+    public static let responseWindowRange: ClosedRange<TimeInterval> = 15...(30 * 60)
+    /// The values offered for the response window; short windows need finer steps than minutes.
+    public static let responseWindowChoices: [TimeInterval] = [15, 30, 60, 2 * 60, 5 * 60, 10 * 60, 15 * 60, 30 * 60]
     public static let idleThresholdRange: ClosedRange<TimeInterval> = (1 * 60)...(60 * 60)
 
     public init(

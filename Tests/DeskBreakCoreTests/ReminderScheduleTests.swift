@@ -130,14 +130,14 @@ struct ReminderSettingsTests {
             waterInterval: 1,
             walkInterval: 1_000_000,
             snoozeLength: .nan,
-            responseWindow: 600,
+            responseWindow: 5,
             idleThreshold: 0
         ).validated()
 
         #expect(settings.waterInterval == ReminderSettings.intervalRange.lowerBound)
         #expect(settings.walkInterval == ReminderSettings.intervalRange.upperBound)
         #expect(settings.snoozeLength == ReminderSettings.default.snoozeLength)
-        #expect(settings.responseWindow == 600)
+        #expect(settings.responseWindow == 15)
         #expect(settings.idleThreshold == ReminderSettings.idleThresholdRange.lowerBound)
     }
 
@@ -162,5 +162,15 @@ struct DurationTextTests {
     ])
     func formatting(seconds: TimeInterval, expected: String) {
         #expect(DurationText.short(seconds) == expected)
+    }
+
+    @Test(arguments: [
+        (15.0, "15 s"),
+        (30.0, "30 s"),
+        (60.0, "1 min"),
+        (600.0, "10 min"),
+    ])
+    func settingFormatting(seconds: TimeInterval, expected: String) {
+        #expect(DurationText.setting(seconds) == expected)
     }
 }
