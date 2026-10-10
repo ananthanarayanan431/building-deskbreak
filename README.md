@@ -23,6 +23,45 @@ Then, once:
 2. **System Settings → Notifications → DeskBreak**: set the style to **Alerts** so reminders stay until answered. (macOS puts the three buttons under **Options** on the alert.)
 3. Turn on **Launch at login** in DeskBreak's Settings. After `brew upgrade`, turn it off and on again so the login item points at the new version.
 
+The tap repository must be named `homebrew-tap` on GitHub for `brew tap ananthanarayanan431/tap` to find it.
+
+## Using the app
+
+DeskBreak lives in the menu bar and has no Dock icon. The icon shows its state: a drop while counting, a moon while you are away or the screen is locked, and a pause symbol while paused.
+
+Click the icon to see:
+
+- **Water** and **Walk**: time to the next reminder, any pending snooze, and today's count as done out of fired (for example `5/7`). Counts reset at midnight.
+- **Pause for 1 hour** / **Resume now**.
+- **Settings…**: see below.
+- **Quit DeskBreak**: stops all activity immediately. Timer state is saved, so the next launch picks up where it left off.
+
+Warnings appear in the menu if notifications are turned off, if the style is still "Banners" instead of "Alerts", or if launch at login needs approval. Each one has a button that opens the right System Settings page.
+
+When a reminder fires, answer it from the notification's **Options** menu:
+
+| Button | Recorded as |
+| --- | --- |
+| I did | done |
+| Not doing | skipped |
+| Remind me in 15 min | the answer to the follow-up, which returns after 15 minutes of active time |
+| No answer within 10 minutes, the X, or clicking the notification body | missed |
+
+## Settings
+
+Changes apply immediately. **Restore defaults** resets every value.
+
+| Setting | Default | Allowed range |
+| --- | --- | --- |
+| Water every | 1 h | 15 min – 8 h, in 15-minute steps |
+| Walk every | 2 h | 15 min – 8 h, in 15-minute steps |
+| Snooze for | 15 min | 1 – 60 min |
+| Answer within (response window) | 10 min | 1 – 30 min |
+| Away after (idle threshold) | 15 min | 1 – 60 min |
+| Launch at login | off | |
+
+If you shorten an interval, a countdown longer than the new interval is cut down to it. Longer intervals leave the current countdown as it is.
+
 ## Build from source
 
 ```sh
@@ -32,9 +71,20 @@ open build/DeskBreak.app
 
 The app must run from the `.app` bundle; notifications need its `Info.plist` and bundle identifier. `swift build` alone only checks that the code compiles.
 
+Unit tests cover the scheduling and log rules in `DeskBreakCore`:
+
 ```sh
-swift test                    # unit tests for the scheduling and log rules
+swift test
 ```
+
+With only the Command Line Tools installed (no Xcode), SwiftPM may not find the Testing framework. Point it there explicitly:
+
+```sh
+F=/Library/Developer/CommandLineTools/Library/Developer/Frameworks
+swift test -Xswiftc -F -Xswiftc "$F" -Xlinker -F -Xlinker "$F" -Xlinker -rpath -Xlinker "$F"
+```
+
+Shortcuts are in the `Makefile`: `make build`, `make app`, `make test`, `make clean`.
 
 ## How it works
 
@@ -49,8 +99,35 @@ swift test                    # unit tests for the scheduling and log rules
 - No answer within the response window (default 10 minutes), closing with the X, or clicking the notification without choosing a button records **missed** and removes the notification.
 - Daily counts go by the day the reminder fired, so a reminder fired at 23:55 and answered at 00:05 counts for the earlier day.
 - Timer state is saved continuously, so quitting or restarting resumes from the remaining time.
+- "Pause for 1 hour" runs on wall-clock time. If the Mac sleeps through the pause, the pause has ended when it wakes.
+- If a reminder is still on screen when the next one of the same kind fires, the older one is recorded as missed.
+- Only one copy runs at a time. A second launch quits itself.
 
 Active time comes from `SuspendingClock`, which does not advance during sleep. The app keeps a single timer that wakes only when something can change: a reminder becoming due, a response window closing, the pause ending, or the idle threshold possibly being reached. While you are away it checks for your return every 5 seconds. It does not poll while locked, because unlocking sends a notification.
+
+### Reminder log
+
+Every reminder is one entry in `~/Library/Application Support/DeskBreak/reminder-log.json`, human-readable JSON:
+
+```json
+{
+  "records" : [
+    {
+      "firedAt" : "2026-10-10T09:00:00Z",
+      "id" : "3F2B…",
+      "kind" : "water",
+      "resolvedAt" : "2026-10-10T09:02:14Z",
+      "snoozeCount" : 0,
+      "status" : "done"
+    }
+  ],
+  "schemaVersion" : 1
+}
+```
+
+`status` is `done`, `skipped` or `missed` once final, and `awaiting` or `snoozed` while a reminder is still open. Final entries older than 60 days are removed automatically.
+
+If the file cannot be read, it is copied to `reminder-log.unreadable.json` in the same folder and a new log is started, so nothing is silently lost. A log written by a newer version of the app is never overwritten.
 
 ### Source layout
 
@@ -93,6 +170,28 @@ Diagnostics go to the unified log only: in Console.app, filter on subsystem `io.
 - [ ] `brew uninstall deskbreak`, then delete the data folder and preferences, and confirm nothing else remains.
 - [ ] Make a Time Machine backup before the first install.
 
+## Uninstall
+
+```sh
+osascript -e 'quit app "DeskBreak"'       # or Quit DeskBreak from the menu
+brew uninstall deskbreak
+rm -rf ~/Library/Application\ Support/DeskBreak
+defaults delete io.github.ananthanarayanan431.deskbreak
+```
+
+Then remove DeskBreak from **System Settings → General → Login Items** if it is still listed. Its entry in **System Settings → Notifications** disappears once the app is gone.
+
+## Troubleshooting
+
+| Problem | Fix |
+| --- | --- |
+| No reminders appear | Check that notifications are allowed for DeskBreak in System Settings → Notifications, and that no Focus mode is on. |
+| Reminders vanish before I answer | Set the notification style to **Alerts**, not **Banners**. |
+| Only one button is visible | macOS shows the three buttons under **Options** on the alert. |
+| Launch at login stopped working after an upgrade | Turn **Launch at login** off and on again in Settings. |
+| Running the binary prints "must run from DeskBreak.app" | Build the bundle with `scripts/build-app.sh` and open the `.app`. |
+| I want to see what the app is doing | Open Console.app and filter on subsystem `io.github.ananthanarayanan431.deskbreak`. |
+
 ## Releasing
 
 1. Bump `VERSION`, commit, then `git tag v$(cat VERSION) && git push --tags`.
@@ -103,4 +202,5 @@ Diagnostics go to the unified log only: in Console.app, filter on subsystem `io.
 
 - In a Focus mode or while sharing the screen, macOS may hide reminders; they are recorded as missed.
 - Watching a video or reading without input counts as idle after the threshold.
-- Idle is detected when the threshold is reached, so the 15 idle minutes themselves count as active time.
+- Idle is detected when the threshold is reached, so the 15 idle minutes themselves count as active time. A reminder can fire during those minutes and then be recorded as missed.
+- The source is about 1,700 lines (not counting tests), more than the few hundred first planned.
