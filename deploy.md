@@ -32,3 +32,17 @@ Run everything from the repository root (the `deskbreak` folder).
 
 Settings, the reminder log, notification permission and launch at login are tied to the bundle identifier, not to a particular build, so they survive a reinstall. Each build is signed ad hoc, so macOS may occasionally ask again for notification or login item approval; approve it again when it does.
 
+
+## Website
+
+The website is plain HTML and CSS in `docs/`: `index.html`, `privacy.html`, `terms.html`, `style.css` and `favicon.svg`. There is no build step. To preview it, open `docs/index.html` in a browser.
+
+To publish it with GitHub Pages:
+
+1. Push the repository to GitHub.
+2. In the repository, open **Settings → Pages**. Under **Build and deployment**, choose **Deploy from a branch**, branch `main`, folder `/docs`, and save.
+3. After a minute the site is live at `https://ananthanarayanan431.github.io/deskbreak/`.
+
+Before launch (see `CLAUDE.md`), connect a custom domain: buy one, enter it under **Settings → Pages → Custom domain**, add the DNS records GitHub shows, and tick **Enforce HTTPS**. GitHub then adds a `docs/CNAME` file; pull it so your copy matches.
+
+The privacy policy says the site is hosted on GitHub Pages and loads fonts from Google Fonts. If you change either, update the "This website" section of `docs/privacy.html`.

@@ -16,9 +16,8 @@ struct MenuContentView: View {
         }
         .padding(14)
         .frame(width: 300)
-        .task {
+        .onAppear {
             controller.refreshLoginItemState()
-            await controller.refreshNotificationStatus()
         }
     }
 
@@ -59,23 +58,6 @@ struct MenuContentView: View {
 
     @ViewBuilder
     private var warnings: some View {
-        switch controller.notificationStatus {
-        case .denied:
-            WarningView(
-                message: "Notifications are turned off, so reminders cannot appear.",
-                actionTitle: "Open Notification Settings",
-                action: controller.openNotificationSettings
-            )
-        case .banners:
-            WarningView(
-                message: "Set the notification style to \"Alerts\" so reminders stay until answered.",
-                actionTitle: "Open Notification Settings",
-                action: controller.openNotificationSettings
-            )
-        case .unknown, .notDetermined, .alerts:
-            EmptyView()
-        }
-
         if controller.loginItemState == .requiresApproval {
             WarningView(
                 message: "Launch at login needs your approval in System Settings.",

@@ -10,7 +10,7 @@ public enum ReminderKind: String, Codable, CaseIterable, Sendable {
 ///
 /// `awaiting` and `snoozed` are transient; `done`, `skipped` and `missed` are final.
 public enum ReminderStatus: String, Codable, Sendable {
-    /// The notification is on screen and the response window is open.
+    /// The reminder is on screen and the response window is open.
     case awaiting
     /// The user chose "Remind me later"; the follow-up has not fired yet.
     case snoozed
@@ -26,11 +26,11 @@ public enum ReminderStatus: String, Codable, Sendable {
     }
 }
 
-/// How the user answered a reminder notification.
+/// How the user answered a reminder.
 public enum ReminderResponse: Sendable, Equatable {
     case done
     case skipped
     case snoozed
-    /// Closed with the X, or clicked without choosing a button.
+    /// Closed with the X without choosing an answer.
     case dismissed
 }

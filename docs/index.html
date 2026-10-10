@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DeskBreak: water and walk reminders for your Mac</title>
+<meta name="description" content="A macOS menu bar app that reminds you to drink water every hour and walk every two hours, counting only the time you are actually using your Mac.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+<div class="wrap">
+<a class="brand" href="./">
+<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c-3.6 4.6-6.5 8.3-6.5 11.7a6.5 6.5 0 0 0 13 0c0-3.4-2.9-7.1-6.5-11.7z" fill="#1A5FD0"/></svg>
+DeskBreak
+</a>
+<nav class="site-nav" aria-label="Main">
+<a href="#how">How it works</a>
+<a href="#privacy">Privacy</a>
+<a href="https://github.com/ananthanarayanan431/deskbreak">Source code</a>
+<a class="button button-primary" href="#install">Install</a>
+</nav>
+</div>
+</header>
+
+<main id="main">
+
+<section class="wrap hero">
+<div class="hero-text">
+<p class="eyebrow">macOS menu bar app</p>
+<h1>Reminds you to drink water every hour and walk every two hours.</h1>
+<p class="lede">DeskBreak counts only the time you are actually using your Mac. Each reminder asks for an answer, and every answer is written to a log on your Mac.</p>
+<div class="actions">
+<a class="button button-primary button-large" href="#install">Install with Homebrew</a>
+<a class="button button-secondary button-large" href="https://github.com/ananthanarayanan431/deskbreak">Read the source</a>
+</div>
+<p class="requirement">Requires macOS 13 (Ventura) or later.</p>
+</div>
+
+<figure class="menu-figure">
+<div class="menu-mock">
+<div class="menu-title">DeskBreak</div>
+<div class="menu-rows">
+<div class="menu-row">
+<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c-3.6 4.6-6.5 8.3-6.5 11.7a6.5 6.5 0 0 0 13 0c0-3.4-2.9-7.1-6.5-11.7z" fill="#1A73E8"/></svg>
+<div class="menu-row-text">
+<div class="menu-row-name">Water</div>
+<div class="menu-row-next">Next in 42 min</div>
+</div>
+<div class="menu-row-count">5/7</div>
+</div>
+<div class="menu-row">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2E8B57" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="13" cy="4" r="2"/><path d="M10 21l2-6 3 3v3"/><path d="M8 11l3-3 3 2 3 3"/><path d="M12 15l-1-5"/></svg>
+<div class="menu-row-text">
+<div class="menu-row-name">Walk</div>
+<div class="menu-row-next">Next in 1 h 12 min</div>
+</div>
+<div class="menu-row-count">2/3</div>
+</div>
+</div>
+<div class="menu-divider"></div>
+<div class="menu-items">
+<div>Pause for 1 hour</div>
+<div>Settings…</div>
+<div>Quit DeskBreak</div>
+</div>
+</div>
+<figcaption>The menu that opens from the drop icon. Counts show reminders done out of reminders shown today. Example values.</figcaption>
+</figure>
+</section>
+
+<section id="how" class="band">
+<div class="wrap section">
+<h2>How it works</h2>
+<div class="features">
+<div>
+<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1A5FD0" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+<h3>Counts active time only</h3>
+<p>Timers freeze while your Mac sleeps and pause while the screen is locked or you have not touched the keyboard or mouse for 15 minutes.</p>
+</div>
+<div>
+<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1A5FD0" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
+<h3>Asks for an answer</h3>
+<p>Each reminder is a small silent panel in the top-right corner with three buttons right underneath: I did, Not doing, or Remind me in 15 min. It never takes keyboard focus, so you can keep typing.</p>
+</div>
+<div>
+<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1A5FD0" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>
+<h3>Keeps a log</h3>
+<p>Every reminder is recorded as done, skipped or missed in a readable JSON file. Entries older than 60 days are removed.</p>
+</div>
+</div>
+
+<h3 class="subhead">What happens to the timers</h3>
+<div class="table-box">
+<table>
+<thead>
+<tr><th scope="col">Situation</th><th scope="col">Water timer</th><th scope="col">Walk timer</th></tr>
+</thead>
+<tbody>
+<tr><td>Lid closed or Mac asleep</td><td>Freezes, resumes on wake</td><td>Freezes, resumes on wake</td></tr>
+<tr><td>Screen locked, or no input for 15 minutes</td><td>Pauses, resumes when you return</td><td>Starts over, since being away counts as a break</td></tr>
+<tr><td>You choose Pause for 1 hour</td><td>Pauses</td><td>Pauses</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3 class="subhead">Settings</h3>
+<div class="table-box">
+<table class="numbers">
+<thead>
+<tr><th scope="col">Setting</th><th scope="col">Default</th><th scope="col">Range</th></tr>
+</thead>
+<tbody>
+<tr><td>Water every</td><td>1 h</td><td>15 min to 8 h</td></tr>
+<tr><td>Walk every</td><td>2 h</td><td>15 min to 8 h</td></tr>
+<tr><td>Snooze for</td><td>15 min</td><td>1 to 60 min</td></tr>
+<tr><td>Answer within</td><td>15 s</td><td>15 s to 30 min</td></tr>
+<tr><td>Away after</td><td>15 min</td><td>1 to 60 min</td></tr>
+<tr><td>Launch at login</td><td>Off</td><td>On or off</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+
+<section id="privacy" class="wrap section split">
+<div class="split-narrow">
+<h2>Nothing leaves your Mac</h2>
+<p>DeskBreak has no account, no analytics and no network code. It needs no special permissions. To notice when you step away, it reads only the number of seconds since your last keyboard or mouse input.</p>
+<p><a href="privacy.html">Read the privacy policy</a></p>
+</div>
+<div class="split-wide">
+<h3>Everything it writes</h3>
+<ul class="file-list">
+<li><div class="name">Reminder log</div><code>~/Library/Application Support/DeskBreak/</code></li>
+<li><div class="name">Settings and timer state</div><code>~/Library/Preferences/io.github.ananthanarayanan431.deskbreak.plist</code></li>
+<li><div class="name">Login item, if you turn it on</div><span class="where">System Settings, General, Login Items</span></li>
+</ul>
+</div>
+</section>
+
+<section id="install" class="band install">
+<div class="wrap section">
+<h2>Install</h2>
+<p class="section-intro">Run these in Terminal.</p>
+<pre><code>brew tap ananthanarayanan431/tap
+brew install deskbreak
+open "$(brew --prefix)/opt/deskbreak/DeskBreak.app"</code></pre>
+<h3>Then, once</h3>
+<ol class="steps">
+<li>Open DeskBreak's Settings from the drop icon and turn on Launch at login.</li>
+</ol>
+<p class="after">Prefer to build it yourself? Instructions are in the <a href="https://github.com/ananthanarayanan431/deskbreak#build-from-source">README</a>.</p>
+</div>
+</section>
+
+</main>
+
+<footer class="site-footer">
+<div class="wrap">
+<span>© 2026 Anantha Narayanan</span>
+<nav aria-label="Footer">
+<a href="privacy.html">Privacy policy</a>
+<a href="terms.html">Terms and conditions</a>
+<a href="https://github.com/ananthanarayanan431/deskbreak">Source code</a>
+</nav>
+</div>
+</footer>
+</body>
+</html>

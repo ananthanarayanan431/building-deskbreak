@@ -6,7 +6,7 @@ struct DeskBreakApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     init() {
-        // Notifications need a real app bundle with an Info.plist; a bare binary would crash on first use.
+        // Launch at login and the preferences domain need a real app bundle with an Info.plist.
         guard Bundle.main.bundleIdentifier != nil else {
             FileHandle.standardError.write(Data("DeskBreak must run from DeskBreak.app. Build it with scripts/build-app.sh.\n".utf8))
             exit(EXIT_FAILURE)

@@ -3,7 +3,7 @@
 A small macOS menu bar app that reminds one person to **drink water every hour** and **walk every two hours** of *active* Mac time. Every reminder asks for an answer, and each one is logged as done, skipped or missed.
 
 - Only time spent working counts. Timers freeze while the Mac sleeps, and pause while the screen is locked or there has been no input for 15 minutes. After an idle break the walk timer starts over, because being away already counts as a break.
-- Each reminder is a silent notification with **I did**, **Not doing** and **Remind me in 15 min**. A snooze runs as its own timer and never moves the regular schedule.
+- Each reminder is a small silent panel in the top-right corner with **I did**, **Not doing** and **Remind me in 15 min** as buttons right underneath. It never takes keyboard focus. A snooze runs as its own timer and never moves the regular schedule.
 - The menu shows time to the next reminders and today's done-out-of-fired counts, plus **Pause for 1 hour** and **Resume now**.
 - Local only: no network access, no accounts, no analytics, no third-party dependencies.
 
@@ -19,9 +19,7 @@ open "$(brew --prefix)/opt/deskbreak/DeskBreak.app"
 
 Then, once:
 
-1. Allow notifications when macOS asks.
-2. **System Settings → Notifications → DeskBreak**: set the style to **Alerts** so reminders stay until answered. (macOS puts the three buttons under **Options** on the alert.)
-3. Turn on **Launch at login** in DeskBreak's Settings. After `brew upgrade`, turn it off and on again so the login item points at the new version.
+1. Turn on **Launch at login** in DeskBreak's Settings. After `brew upgrade`, turn it off and on again so the login item points at the new version.
 
 The tap repository must be named `homebrew-tap` on GitHub for `brew tap ananthanarayanan431/tap` to find it.
 
@@ -36,16 +34,16 @@ Click the icon to see:
 - **Settings…**: see below.
 - **Quit DeskBreak**: stops all activity immediately. Timer state is saved, so the next launch picks up where it left off.
 
-Warnings appear in the menu if notifications are turned off, if the style is still "Banners" instead of "Alerts", or if launch at login needs approval. Each one has a button that opens the right System Settings page.
+A warning appears in the menu if launch at login needs approval, with a button that opens the right System Settings page.
 
-When a reminder fires, answer it from the notification's **Options** menu:
+When a reminder fires, a panel appears in the top-right corner of the screen. Water and walk reminders get separate panels, stacked when both are due. Click one of its buttons:
 
 | Button | Recorded as |
 | --- | --- |
 | I did | done |
 | Not doing | skipped |
 | Remind me in 15 min | the answer to the follow-up, which returns after 15 minutes of active time |
-| No answer within 15 seconds, the X, or clicking the notification body | missed |
+| No answer within the response window (15 seconds by default), or the X | missed |
 
 ## Settings
 
@@ -69,7 +67,7 @@ scripts/build-app.sh          # creates build/DeskBreak.app, signed ad hoc
 open build/DeskBreak.app
 ```
 
-The app must run from the `.app` bundle; notifications need its `Info.plist` and bundle identifier. `swift build` alone only checks that the code compiles.
+The app must run from the `.app` bundle; launch at login and its preferences need the bundle's `Info.plist` and identifier. `swift build` alone only checks that the code compiles.
 
 Unit tests cover the scheduling and log rules in `DeskBreakCore`:
 
@@ -102,14 +100,16 @@ Installing a build into `/Applications` (needed for launch at login) and updatin
 
 - A regular timer restarts the moment its reminder fires, whatever the answer.
 - If the next regular reminder of the same kind fires while a snooze is pending, the snooze is cancelled and that earlier reminder is recorded as missed.
-- No answer within the response window (default 15 seconds), closing with the X, or clicking the notification without choosing a button records **missed** and removes the notification.
+- No answer within the response window (default 15 seconds), or closing with the X, records **missed** and removes the panel.
+- The panel is not a system notification, so it needs no notification permission and still appears in Focus modes. It never becomes the active window, so typing in another app is never interrupted. It is excluded from screen recordings and screen sharing where macOS honours that.
+- If you quit while a reminder is on screen, it comes back on the next launch if its response window is still open.
 - Daily counts go by the day the reminder fired, so a reminder fired at 23:55 and answered at 00:05 counts for the earlier day.
 - Timer state is saved continuously, so quitting or restarting resumes from the remaining time.
 - "Pause for 1 hour" runs on wall-clock time. If the Mac sleeps through the pause, the pause has ended when it wakes.
 - If a reminder is still on screen when the next one of the same kind fires, the older one is recorded as missed.
 - Only one copy runs at a time. A second launch quits itself.
 
-Active time comes from `SuspendingClock`, which does not advance during sleep. The app keeps a single timer that wakes only when something can change: a reminder becoming due, a response window closing, the pause ending, or the idle threshold possibly being reached. While you are away it checks for your return every 5 seconds. It does not poll while locked, because unlocking sends a notification.
+Active time comes from `SuspendingClock`, which does not advance during sleep. The app keeps a single timer that wakes only when something can change: a reminder becoming due, a response window closing, the pause ending, or the idle threshold possibly being reached. While you are away it checks for your return every 5 seconds. It does not poll while locked, because macOS reports the unlock.
 
 ### Reminder log
 
@@ -139,7 +139,7 @@ If the file cannot be read, it is copied to `reminder-log.unreadable.json` in th
 
 ```
 Sources/DeskBreakCore/   Pure logic (Foundation only): schedule rules, log, log file store
-Sources/DeskBreak/       Menu bar app: controller, notifications, idle/lock monitor, SwiftUI views
+Sources/DeskBreak/       Menu bar app: controller, reminder panel, idle/lock monitor, SwiftUI views
 Tests/                   Unit tests for DeskBreakCore
 Resources/Info.plist     Bundle metadata template (LSUIElement: no Dock icon)
 scripts/build-app.sh     Builds, assembles and ad hoc signs DeskBreak.app
@@ -154,7 +154,6 @@ packaging/homebrew/      Formula to copy into the homebrew-tap repository
 | Reminder log (one JSON file) | `~/Library/Application Support/DeskBreak/` | `rm -rf ~/Library/Application\ Support/DeskBreak` |
 | Settings and timer state | `~/Library/Preferences/io.github.ananthanarayanan431.deskbreak.plist` | `defaults delete io.github.ananthanarayanan431.deskbreak` |
 | Login item | System Settings → General → Login Items | Turn off in DeskBreak, or remove from the list |
-| Notification permission | System Settings → Notifications | Revoke at any time |
 
 Safety rules enforced in the code:
 
@@ -171,7 +170,7 @@ Diagnostics go to the unified log only: in Console.app, filter on subsystem `io.
 
 - [ ] Read the source in full.
 - [ ] `grep -rnE "URLSession|Process\(|FileManager" Sources`: the first two never appear; every `FileManager` use is in `LogFileStore.swift`.
-- [ ] DeskBreak appears only under Login Items and Notifications in System Settings, and in no Privacy & Security list.
+- [ ] DeskBreak appears only under Login Items in System Settings, and in no Privacy & Security list.
 - [ ] CPU and memory in Activity Monitor stay near zero between reminders.
 - [ ] `brew uninstall deskbreak`, then delete the data folder and preferences, and confirm nothing else remains.
 - [ ] Make a Time Machine backup before the first install.
@@ -185,15 +184,14 @@ rm -rf ~/Library/Application\ Support/DeskBreak
 defaults delete io.github.ananthanarayanan431.deskbreak
 ```
 
-Then remove DeskBreak from **System Settings → General → Login Items** if it is still listed. Its entry in **System Settings → Notifications** disappears once the app is gone.
+Then remove DeskBreak from **System Settings → General → Login Items** if it is still listed.
 
 ## Troubleshooting
 
 | Problem | Fix |
 | --- | --- |
-| No reminders appear | Check that notifications are allowed for DeskBreak in System Settings → Notifications, and that no Focus mode is on. |
-| Reminders vanish before I answer | Set the notification style to **Alerts**, not **Banners**. Unanswered reminders are also removed when **Answer within** runs out (15 seconds by default); raise it in Settings for more time. |
-| Only one button is visible | macOS shows the three buttons under **Options** on the alert. |
+| No reminders appear | Check that DeskBreak is running (its icon is in the menu bar) and not paused, and that the countdown in the menu is moving. It stops while you are away or the screen is locked. |
+| Reminders vanish before I answer | Unanswered reminders are removed when **Answer within** runs out (15 seconds by default). Raise it in Settings for more time. |
 | Launch at login stopped working after an upgrade | Turn **Launch at login** off and on again in Settings. |
 | Running the binary prints "must run from DeskBreak.app" | Build the bundle with `scripts/build-app.sh` and open the `.app`. |
 | I want to see what the app is doing | Open Console.app and filter on subsystem `io.github.ananthanarayanan431.deskbreak`. |
@@ -206,7 +204,11 @@ Then remove DeskBreak from **System Settings → General → Login Items** if it
 
 ## Known limits (version 1)
 
-- In a Focus mode or while sharing the screen, macOS may hide reminders; they are recorded as missed.
+- Reminders appear on the main screen only (the one with the menu bar).
 - Watching a video or reading without input counts as idle after the threshold.
 - Idle is detected when the threshold is reached, so the 15 idle minutes themselves count as active time. A reminder can fire during those minutes and then be recorded as missed.
 - The source is about 1,700 lines (not counting tests), more than the few hundred first planned.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

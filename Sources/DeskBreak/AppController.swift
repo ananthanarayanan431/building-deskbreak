@@ -25,7 +25,6 @@ final class AppController: ObservableObject {
     @Published private(set) var log: ReminderLog
     @Published private(set) var pauseUntil: Date?
     @Published private(set) var activity: Activity = .active
-    @Published private(set) var notificationStatus: NotificationService.Status = .unknown
     @Published private(set) var loginItemState: LoginItem.State = .disabled
     @Published private(set) var lastError: String?
 
@@ -38,14 +37,14 @@ final class AppController: ObservableObject {
     /// How often to check for the user's return while away. Only used while away, not while locked.
     private static let awayPollInterval: TimeInterval = 5
     private static let minimumWake: TimeInterval = 1
-    /// Upper bound on any sleep, as a safety net against a missed system notification.
+    /// Upper bound on any sleep, as a safety net against a missed lock or wake event.
     private static let maximumWake: TimeInterval = 60 * 60
 
     // MARK: Dependencies and internals
 
     private let stateStore: StateStore
     private let logStore: LogFileStore?
-    private let notifications = NotificationService()
+    private let reminderPanels = ReminderPanelController()
     private let monitor = ActivityMonitor()
     private let clock = SuspendingClock()
 
@@ -84,10 +83,9 @@ final class AppController: ObservableObject {
         guard !started else { return }
         started = true
 
-        notifications.onResponse = { [weak self] recordID, response in
+        reminderPanels.onResponse = { [weak self] recordID, response in
             self?.handle(response, for: recordID)
         }
-        notifications.activate(snoozeLength: settings.snoozeLength)
 
         monitor.onEvent = { [weak self] event in
             self?.handle(event)
@@ -98,11 +96,14 @@ final class AppController: ObservableObject {
         log.prune(firedBefore: Date().addingTimeInterval(-Self.logRetention))
         saveLog()
 
-        refreshLoginItemState()
-        Task {
-            await notifications.requestAuthorization()
-            await refreshNotificationStatus()
+        // Panels do not survive a quit, so bring back any reminder still inside its response window.
+        // Overdue ones are marked missed by the first refresh below.
+        let now = Date()
+        for record in log.records where record.status == .awaiting && (record.respondBy ?? now) > now {
+            reminderPanels.show(record, isFollowUp: record.snoozeCount > 0, snoozeLength: settings.snoozeLength)
         }
+
+        refreshLoginItemState()
 
         Log.app.info("Started")
         refresh()
@@ -114,6 +115,7 @@ final class AppController: ObservableObject {
         wakeTask?.cancel()
         wakeTask = nil
         monitor.stop()
+        reminderPanels.removeAll()
         persistState()
         saveLog()
         Log.app.info("Stopped")
@@ -139,13 +141,9 @@ final class AppController: ObservableObject {
 
         // Credit time already elapsed under the old settings before changing anything.
         accrueActiveTime()
-        let snoozeLengthChanged = newSettings.snoozeLength != settings.snoozeLength
         settings = newSettings
         schedule.adapt(to: newSettings)
         stateStore.save(newSettings)
-        if snoozeLengthChanged {
-            notifications.registerCategory(snoozeLength: newSettings.snoozeLength)
-        }
         refresh()
     }
 
@@ -162,14 +160,6 @@ final class AppController: ObservableObject {
 
     func refreshLoginItemState() {
         loginItemState = LoginItem.state
-    }
-
-    func refreshNotificationStatus() async {
-        notificationStatus = await notifications.currentStatus()
-    }
-
-    func openNotificationSettings() {
-        notifications.openSystemSettings()
     }
 
     func openLoginItemSettings() {
@@ -268,7 +258,7 @@ final class AppController: ObservableObject {
         case .away:
             candidates.append(Self.awayPollInterval)
         case .locked:
-            // Unlock arrives as a notification; nothing to poll.
+            // Unlock arrives as a system event; nothing to poll.
             break
         }
 
@@ -316,7 +306,7 @@ final class AppController: ObservableObject {
         accrueActiveTime()
 
         guard let record = log.record(id: recordID), record.status == .awaiting else {
-            Log.notifications.info("Ignoring answer for a reminder that is no longer awaiting one")
+            Log.reminders.info("Ignoring answer for a reminder that is no longer awaiting one")
             refresh()
             return
         }
@@ -356,7 +346,7 @@ final class AppController: ObservableObject {
         )
         log.append(record)
         saveLog()
-        notifications.post(record, isFollowUp: false)
+        reminderPanels.show(record, isFollowUp: false, snoozeLength: settings.snoozeLength)
         Log.scheduler.info("Fired \(kind.rawValue, privacy: .public) reminder")
     }
 
@@ -368,13 +358,13 @@ final class AppController: ObservableObject {
             record.respondBy = now.addingTimeInterval(settings.responseWindow)
         }) else { return }
         saveLog()
-        notifications.post(updated, isFollowUp: true)
+        reminderPanels.show(updated, isFollowUp: true, snoozeLength: settings.snoozeLength)
         Log.scheduler.info("Fired snoozed \(record.kind.rawValue, privacy: .public) reminder")
     }
 
     private func resolve(_ recordID: UUID, as status: ReminderStatus) {
         guard log.resolve(id: recordID, as: status, at: Date()) else { return }
-        notifications.remove(recordID: recordID)
+        reminderPanels.remove(recordID: recordID)
         saveLog()
     }
 
@@ -382,7 +372,7 @@ final class AppController: ObservableObject {
         let expired = log.expireOverdue(now: Date())
         guard !expired.isEmpty else { return }
         for record in expired {
-            notifications.remove(recordID: record.id)
+            reminderPanels.remove(recordID: record.id)
         }
         saveLog()
         Log.scheduler.info("Marked \(expired.count) reminder(s) as missed")

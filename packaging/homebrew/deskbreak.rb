@@ -7,6 +7,7 @@
 class Deskbreak < Formula
   desc "Menu bar reminders to drink water and walk, counted in active Mac time"
   homepage "https://github.com/ananthanarayanan431/deskbreak"
+  license "MIT"
   url "https://github.com/ananthanarayanan431/deskbreak/archive/refs/tags/v1.0.0.tar.gz"
   sha256 "REPLACE_WITH_SHA256_OF_THE_TAGGED_TARBALL"
   version "1.0.0"
@@ -25,11 +26,8 @@ class Deskbreak < Formula
       Start DeskBreak:
         open "#{opt_prefix}/DeskBreak.app"
 
-      Then:
-        1. Allow notifications when macOS asks.
-        2. System Settings → Notifications → DeskBreak → set the style to "Alerts".
-        3. Turn on "Launch at login" in DeskBreak's Settings.
-           After `brew upgrade deskbreak`, toggle it off and on again so it points at the new version.
+      Then turn on "Launch at login" in DeskBreak's Settings.
+      After `brew upgrade deskbreak`, toggle it off and on again so it points at the new version.
 
       To remove everything after `brew uninstall deskbreak`:
         rm -rf ~/Library/Application\\ Support/DeskBreak

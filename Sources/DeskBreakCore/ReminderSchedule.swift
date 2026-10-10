@@ -2,7 +2,7 @@ import Foundation
 
 /// The countdown state for both reminder kinds, measured in seconds of *active* time.
 ///
-/// This type knows nothing about clocks, idle detection or notifications. The caller decides
+/// This type knows nothing about clocks, idle detection or how reminders are shown. The caller decides
 /// when time is "active" and feeds the elapsed amount to `advance(by:settings:)`, which keeps
 /// the rules (restart on fire, snooze cancellation) pure and testable.
 public struct ReminderSchedule: Codable, Equatable, Sendable {
