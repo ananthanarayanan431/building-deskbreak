@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="330" viewBox="0 0 760 330" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif">
+  <title>DeskBreak menu and reminder panel (illustration)</title>
+  <defs>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000" flood-opacity="0.18"/>
+    </filter>
+    <symbol id="drop" viewBox="0 0 16 20">
+      <path d="M8 0 C8 0 0 9 0 13 a8 8 0 0 0 16 0 C16 9 8 0 8 0 Z"/>
+    </symbol>
+    <symbol id="walk" viewBox="0 0 16 20">
+      <circle cx="9" cy="2.5" r="2.4"/>
+      <path d="M8 6 L5 13 M8 6 L10 12 L13 13 M8 6 L4 9 M7 11 L5 19 M8 11 L11 19" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </symbol>
+  </defs>
+
+  <rect width="760" height="330" fill="#eef1f4"/>
+
+  <!-- Menu bar strip -->
+  <rect width="760" height="26" fill="#fafafa"/>
+  <rect y="26" width="760" height="1" fill="#d5d8dc"/>
+  <use href="#drop" x="236" y="6" width="12" height="15" fill="#0a84ff"/>
+  <text x="700" y="18" font-size="12" fill="#333">10:42</text>
+
+  <!-- Menu window -->
+  <g transform="translate(92 36)" filter="url(#shadow)">
+    <rect width="300" height="248" rx="10" fill="#ffffff" stroke="#d9dce0"/>
+  </g>
+  <g transform="translate(106 50)">
+    <text x="0" y="14" font-size="14" font-weight="600" fill="#1d1d1f">DeskBreak</text>
+
+    <use href="#drop" x="2" y="34" width="14" height="17" fill="#0a84ff"/>
+    <text x="28" y="44" font-size="13" font-weight="500" fill="#1d1d1f">Water</text>
+    <text x="28" y="60" font-size="11" fill="#6e6e73">Next in 42 min</text>
+    <text x="272" y="46" font-size="13" text-anchor="end" fill="#1d1d1f">5/7</text>
+
+    <use href="#walk" x="2" y="80" width="14" height="18" fill="#30a14e" stroke="#30a14e"/>
+    <text x="28" y="90" font-size="13" font-weight="500" fill="#1d1d1f">Walk</text>
+    <text x="28" y="106" font-size="11" fill="#6e6e73">Next in 1 h 12 min</text>
+    <text x="28" y="121" font-size="11" fill="#6e6e73">Snoozed, back in 9 min</text>
+    <text x="272" y="92" font-size="13" text-anchor="end" fill="#1d1d1f">2/3</text>
+
+    <rect x="0" y="138" width="272" height="1" fill="#e3e5e8"/>
+
+    <rect x="-4" y="148" width="280" height="26" rx="5" fill="#f0f1f3"/>
+    <text x="6" y="166" font-size="13" fill="#1d1d1f">Pause for 1 hour</text>
+    <text x="6" y="194" font-size="13" fill="#1d1d1f">Settings…</text>
+    <text x="6" y="222" font-size="13" fill="#1d1d1f">Quit DeskBreak</text>
+  </g>
+
+  <!-- Reminder panel, top-right of the screen -->
+  <g transform="translate(408 40)" filter="url(#shadow)">
+    <rect width="340" height="104" rx="12" fill="#ffffff" stroke="#d9dce0"/>
+  </g>
+  <g transform="translate(422 54)">
+    <use href="#drop" x="3" y="2" width="20" height="25" fill="#0a84ff"/>
+    <text x="36" y="15" font-size="14" font-weight="600" fill="#1d1d1f">Drink some water</text>
+    <text x="36" y="33" font-size="12.5" fill="#6e6e73">Time for a glass of water.</text>
+    <path d="M304 4 l8 8 M312 4 l-8 8" stroke="#8e8e93" stroke-width="1.6" stroke-linecap="round"/>
+
+    <rect x="0" y="52" width="52" height="26" rx="6" fill="#0a84ff"/>
+    <text x="26" y="69" font-size="12.5" text-anchor="middle" fill="#ffffff">I did</text>
+    <rect x="60" y="52" width="82" height="26" rx="6" fill="#e9eaed"/>
+    <text x="101" y="69" font-size="12.5" text-anchor="middle" fill="#1d1d1f">Not doing</text>
+    <rect x="166" y="52" width="146" height="26" rx="6" fill="#e9eaed"/>
+    <text x="239" y="69" font-size="12.5" text-anchor="middle" fill="#1d1d1f">Remind me in 15 min</text>
+  </g>
+
+  <!-- Second panel stacked underneath -->
+  <g transform="translate(408 156)" filter="url(#shadow)">
+    <rect width="340" height="104" rx="12" fill="#ffffff" stroke="#d9dce0"/>
+  </g>
+  <g transform="translate(422 170)">
+    <use href="#walk" x="3" y="2" width="20" height="25" fill="#30a14e" stroke="#30a14e"/>
+    <text x="36" y="15" font-size="14" font-weight="600" fill="#1d1d1f">Time to walk</text>
+    <text x="36" y="33" font-size="12.5" fill="#6e6e73">Stand up and walk for a few minutes.</text>
+    <path d="M304 4 l8 8 M312 4 l-8 8" stroke="#8e8e93" stroke-width="1.6" stroke-linecap="round"/>
+
+    <rect x="0" y="52" width="52" height="26" rx="6" fill="#0a84ff"/>
+    <text x="26" y="69" font-size="12.5" text-anchor="middle" fill="#ffffff">I did</text>
+    <rect x="60" y="52" width="82" height="26" rx="6" fill="#e9eaed"/>
+    <text x="101" y="69" font-size="12.5" text-anchor="middle" fill="#1d1d1f">Not doing</text>
+    <rect x="166" y="52" width="146" height="26" rx="6" fill="#e9eaed"/>
+    <text x="239" y="69" font-size="12.5" text-anchor="middle" fill="#1d1d1f">Remind me in 15 min</text>
+  </g>
+
+  <text x="92" y="322" font-size="11" fill="#6e6e73">Menu (left) and two stacked reminder panels (right). Illustration, not a screenshot.</text>
+</svg>

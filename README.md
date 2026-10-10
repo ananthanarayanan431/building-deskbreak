@@ -1,11 +1,17 @@
 # DeskBreak
 
+![A glass of water on a wooden desk](docs/images/readme-banner.jpg)
+
 A small macOS menu bar app that reminds one person to **drink water every hour** and **walk every two hours** of *active* Mac time. Every reminder asks for an answer, and each one is logged as done, skipped or missed.
 
 - Only time spent working counts. Timers freeze while the Mac sleeps, and pause while the screen is locked or there has been no input for 15 minutes. After an idle break the walk timer starts over, because being away already counts as a break.
 - Each reminder is a small silent panel in the top-right corner with **I did**, **Not doing** and **Remind me in 15 min** as buttons right underneath. It never takes keyboard focus. A snooze runs as its own timer and never moves the regular schedule.
 - The menu shows time to the next reminders and today's done-out-of-fired counts, plus **Pause for 1 hour** and **Resume now**.
 - Local only: no network access, no accounts, no analytics, no third-party dependencies.
+
+![The DeskBreak menu next to a water and a walk reminder panel](docs/images/readme-ui.svg)
+
+*The menu and the reminder panels, drawn from the app's real labels. This is an illustration, not a screenshot.*
 
 Requires macOS 13 (Ventura) or later and Xcode or the Xcode Command Line Tools.
 
@@ -25,24 +31,25 @@ The tap repository must be named `homebrew-tap` on GitHub for `brew tap ananthan
 
 ## Using the app
 
-DeskBreak lives in the menu bar and has no Dock icon. The icon shows its state: a drop while counting, a moon while you are away or the screen is locked, and a pause symbol while paused.
+DeskBreak lives in the menu bar and has no Dock icon. The icon shows its state: a filled blue drop while counting, a grey moon while you are away or the screen is locked, and a grey pause symbol while paused. The blue colour itself tells you reminders are running.
 
 Click the icon to see:
 
-- **Water** and **Walk**: time to the next reminder, any pending snooze, and today's count as done out of fired (for example `5/7`). Counts reset at midnight.
+- A status badge next to the title: **Away**, **Locked**, or **Paused until** a time. Nothing is shown while counting.
+- **Water** and **Walk**: time to the next reminder (marked "paused" while not counting), any pending snooze, and today's count as done out of fired (for example `5/7`). Counts reset at midnight.
 - **Pause for 1 hour** / **Resume now**.
 - **Settings…**: see below.
 - **Quit DeskBreak**: stops all activity immediately. Timer state is saved, so the next launch picks up where it left off.
 
 A warning appears in the menu if launch at login needs approval, with a button that opens the right System Settings page.
 
-When a reminder fires, a panel appears in the top-right corner of the screen. Water and walk reminders get separate panels, stacked when both are due. Click one of its buttons:
+When a reminder fires, a panel appears in the top-right corner of the screen. The water panel says **Drink some water** and the walk panel says **Time to walk**; a snoozed reminder that comes back is labelled "Snoozed reminder". Water and walk reminders get separate panels, stacked when both are due. Click one of its buttons:
 
 | Button | Recorded as |
 | --- | --- |
 | I did | done |
 | Not doing | skipped |
-| Remind me in 15 min | the answer to the follow-up, which returns after 15 minutes of active time |
+| Remind me in 15 min (follows the **Snooze for** setting) | the answer to the follow-up, which returns after the snooze length of active time |
 | No answer within the response window (15 seconds by default), or the X | missed |
 
 ## Settings
@@ -53,12 +60,12 @@ Changes apply immediately. **Restore defaults** resets every value.
 | --- | --- | --- |
 | Water every | 1 h | 15 min – 8 h, in 15-minute steps |
 | Walk every | 2 h | 15 min – 8 h, in 15-minute steps |
-| Snooze for | 15 min | 1 – 60 min |
-| Answer within (response window) | 15 s | 15 s – 30 min |
-| Away after (idle threshold) | 15 min | 1 – 60 min |
+| Snooze for | 15 min | 1 – 60 min, in 5-minute steps |
+| Answer within (response window) | 15 s | 15 s, 30 s, 1, 2, 5, 10, 15 or 30 min |
+| Away after (idle threshold) | 15 min | 1 – 60 min, in 1-minute steps |
 | Launch at login | off | |
 
-If you shorten an interval, a countdown longer than the new interval is cut down to it. Longer intervals leave the current countdown as it is.
+If you shorten an interval, a countdown longer than the new interval is cut down to it. Longer intervals leave the current countdown as it is. Settings saved by an older version still load; any missing value takes its default, and out-of-range values are clamped.
 
 ## Build from source
 
@@ -144,7 +151,13 @@ Tests/                   Unit tests for DeskBreakCore
 Resources/Info.plist     Bundle metadata template (LSUIElement: no Dock icon)
 scripts/build-app.sh     Builds, assembles and ad hoc signs DeskBreak.app
 packaging/homebrew/      Formula to copy into the homebrew-tap repository
+docs/                    Static website (home, privacy policy, terms) and README images
+.github/workflows/       CI: build, test and assemble the app bundle on macOS
 ```
+
+### Website
+
+`docs/` holds a plain HTML and CSS site with no build step and no JavaScript: `index.html`, `privacy.html`, `terms.html`, `style.css` and `favicon.svg`. It can be served by GitHub Pages from the `docs/` folder on `main`. The rules for its design and copy, and the checklist that must be finished before it goes live, are in [CLAUDE.md](CLAUDE.md).
 
 ## What the app touches
 
@@ -207,8 +220,13 @@ Then remove DeskBreak from **System Settings → General → Login Items** if it
 - Reminders appear on the main screen only (the one with the menu bar).
 - Watching a video or reading without input counts as idle after the threshold.
 - Idle is detected when the threshold is reached, so the 15 idle minutes themselves count as active time. A reminder can fire during those minutes and then be recorded as missed.
-- The source is about 1,700 lines (not counting tests), more than the few hundred first planned.
+- The source is about 1,800 lines (not counting tests), more than the few hundred first planned.
 
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
+## Image credits
+
+- Banner photo by [Quang Tran](https://unsplash.com/@quangtran304) on [Unsplash](https://unsplash.com/photos/a-glass-of-water-on-a-wooden-desk-p-Xc2noGZg4), used under the Unsplash License.
+- The menu and panel illustration (`docs/images/readme-ui.svg`) was drawn for this README.
