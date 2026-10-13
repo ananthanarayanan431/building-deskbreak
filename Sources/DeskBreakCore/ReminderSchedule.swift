@@ -44,12 +44,16 @@ public struct ReminderSchedule: Codable, Equatable, Sendable {
     /// Timers within this many seconds of zero count as due, absorbing floating point drift.
     static let dueTolerance: TimeInterval = 0.5
 
+    /// The least active time between a water and a walk reminder, so the two never arrive together.
+    public static let minimumGap: TimeInterval = 15 * 60
+
     public private(set) var water: Slot
     public private(set) var walk: Slot
 
     public init(settings: ReminderSettings) {
         water = Slot(regularRemaining: settings.waterInterval)
         walk = Slot(regularRemaining: settings.walkInterval)
+        separateRegularTimers()
     }
 
     public init(water: Slot, walk: Slot) {
@@ -111,6 +115,7 @@ public struct ReminderSchedule: Codable, Equatable, Sendable {
 
             self[kind] = slot
         }
+        separateRegularTimers()
         return events
     }
 
@@ -130,6 +135,7 @@ public struct ReminderSchedule: Codable, Equatable, Sendable {
     /// Restarts the regular timer at its full interval. Used for the walk timer after an idle break.
     public mutating func resetRegular(_ kind: ReminderKind, settings: ReminderSettings) {
         self[kind].regularRemaining = settings.interval(for: kind)
+        separateRegularTimers()
     }
 
     /// Removes a pending snooze and returns its record ID, if there was one.
@@ -151,6 +157,7 @@ public struct ReminderSchedule: Codable, Equatable, Sendable {
             }
             self[kind] = slot
         }
+        separateRegularTimers()
     }
 
     /// Repairs state loaded from disk: non-finite or out-of-range values are reset.
@@ -159,7 +166,9 @@ public struct ReminderSchedule: Codable, Equatable, Sendable {
         for kind in ReminderKind.allCases {
             var slot = copy[kind]
             let interval = settings.interval(for: kind)
-            if !slot.regularRemaining.isFinite || slot.regularRemaining <= 0 || slot.regularRemaining > interval {
+            // A timer may sit up to `minimumGap` past its interval after being moved apart from the other.
+            if !slot.regularRemaining.isFinite || slot.regularRemaining <= 0
+                || slot.regularRemaining > interval + Self.minimumGap {
                 slot.regularRemaining = interval
             }
             if let snooze = slot.snooze,
@@ -168,6 +177,19 @@ public struct ReminderSchedule: Codable, Equatable, Sendable {
             }
             copy[kind] = slot
         }
+        copy.separateRegularTimers()
         return copy
+    }
+
+    /// Delays the later regular reminder until it is at least `minimumGap` after the earlier one.
+    /// On a tie the water reminder moves, since it comes round more often than the walk reminder.
+    mutating func separateRegularTimers() {
+        let gap = abs(water.regularRemaining - walk.regularRemaining)
+        guard gap < Self.minimumGap else { return }
+        if water.regularRemaining >= walk.regularRemaining {
+            water.regularRemaining = walk.regularRemaining + Self.minimumGap
+        } else {
+            walk.regularRemaining = water.regularRemaining + Self.minimumGap
+        }
     }
 }

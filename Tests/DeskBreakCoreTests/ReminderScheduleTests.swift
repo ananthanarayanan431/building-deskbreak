@@ -5,32 +5,81 @@ import Testing
 @Suite("ReminderSchedule")
 struct ReminderScheduleTests {
     let settings = ReminderSettings.default
+    /// Intervals that never come within `minimumGap` of each other in these tests, so one timer
+    /// can be checked without the other moving it.
+    var apart: ReminderSettings {
+        var apart = settings
+        apart.walkInterval = 150 * 60
+        return apart
+    }
 
     @Test("Water fires after one hour of active time and restarts immediately")
     func waterFiresHourly() {
-        var schedule = ReminderSchedule(settings: settings)
+        var schedule = ReminderSchedule(settings: apart)
 
-        let early = schedule.advance(by: 59 * 60, settings: settings)
-        let due = schedule.advance(by: 60, settings: settings)
+        let early = schedule.advance(by: 59 * 60, settings: apart)
+        let due = schedule.advance(by: 60, settings: apart)
         #expect(early.isEmpty)
         #expect(due == [.regularDue(.water)])
-        #expect(schedule.water.regularRemaining == settings.waterInterval)
+        #expect(schedule.water.regularRemaining == apart.waterInterval)
     }
 
-    @Test("Both reminders fire at the two-hour mark")
-    func bothFireAtTwoHours() {
+    @Test("Water and walk never fire together; the second water waits 15 minutes past the walk")
+    func waterAndWalkAreSeparated() {
         var schedule = ReminderSchedule(settings: settings)
         _ = schedule.advance(by: 60 * 60, settings: settings)
+        // Both would now be due in one hour; water moves to 15 minutes after the walk.
+        #expect(schedule.walk.regularRemaining == 60 * 60)
+        #expect(schedule.water.regularRemaining == 75 * 60)
 
-        let events = schedule.advance(by: 60 * 60, settings: settings)
-        #expect(events == [.regularDue(.water), .regularDue(.walk)])
+        let walkDue = schedule.advance(by: 60 * 60, settings: settings)
+        #expect(walkDue == [.regularDue(.walk)])
+        let waterDue = schedule.advance(by: ReminderSchedule.minimumGap, settings: settings)
+        #expect(waterDue == [.regularDue(.water)])
+    }
+
+    @Test("Over a long day the two kinds always stay at least 15 minutes apart")
+    func gapHoldsOverTime() {
+        var schedule = ReminderSchedule(settings: settings)
+        var fires: [ReminderKind: [TimeInterval]] = [:]
+        for minute in 1...(12 * 60) {
+            for case .regularDue(let kind) in schedule.advance(by: 60, settings: settings) {
+                fires[kind, default: []].append(TimeInterval(minute * 60))
+            }
+        }
+        let water = fires[.water] ?? []
+        let walk = fires[.walk] ?? []
+        #expect(water.count >= 10)
+        #expect(walk.count >= 5)
+        for w in walk {
+            #expect(water.allSatisfy { abs($0 - w) >= ReminderSchedule.minimumGap })
+        }
+    }
+
+    @Test("Resetting the walk timer moves it clear of a water reminder due at the same time")
+    func resetKeepsGap() {
+        var schedule = ReminderSchedule(
+            water: .init(regularRemaining: 2 * 60 * 60 - 60),
+            walk: .init(regularRemaining: 30 * 60)
+        )
+        schedule.resetRegular(.walk, settings: settings)
+        #expect(abs(schedule.water.regularRemaining - schedule.walk.regularRemaining) >= ReminderSchedule.minimumGap)
+    }
+
+    @Test("A separated timer loaded from disk is kept, not reset")
+    func sanitizedKeepsSeparatedTimer() {
+        let saved = ReminderSchedule(
+            water: .init(regularRemaining: 75 * 60),
+            walk: .init(regularRemaining: 60 * 60)
+        )
+        #expect(saved.sanitized(for: settings) == saved)
     }
 
     @Test("Late wake-ups shorten the next interval by the overshoot")
     func overshootCarriesOver() {
-        var schedule = ReminderSchedule(settings: settings)
-        _ = schedule.advance(by: 60 * 60 + 30, settings: settings)
-        #expect(schedule.water.regularRemaining == settings.waterInterval - 30)
+        var schedule = ReminderSchedule(settings: apart)
+        _ = schedule.advance(by: 60 * 60 + 30, settings: apart)
+        #expect(schedule.water.regularRemaining == apart.waterInterval - 30)
     }
 
     @Test("A huge gap fires once, not repeatedly")
@@ -43,17 +92,17 @@ struct ReminderScheduleTests {
 
     @Test("A snooze fires after its own length and does not move the regular timer")
     func snoozeIsIndependent() {
-        var schedule = ReminderSchedule(settings: settings)
-        _ = schedule.advance(by: 60 * 60, settings: settings)
+        var schedule = ReminderSchedule(settings: apart)
+        _ = schedule.advance(by: 60 * 60, settings: apart)
         let record = UUID()
 
-        let replaced = schedule.snooze(.water, recordID: record, length: settings.snoozeLength)
+        let replaced = schedule.snooze(.water, recordID: record, length: apart.snoozeLength)
         #expect(replaced == nil)
-        let events = schedule.advance(by: settings.snoozeLength, settings: settings)
+        let events = schedule.advance(by: apart.snoozeLength, settings: apart)
 
         #expect(events == [.snoozeDue(.water, recordID: record)])
         #expect(schedule.water.snooze == nil)
-        #expect(schedule.water.regularRemaining == settings.waterInterval - settings.snoozeLength)
+        #expect(schedule.water.regularRemaining == apart.waterInterval - apart.snoozeLength)
     }
 
     @Test("The next regular reminder cancels a pending snooze of the same kind")
@@ -81,10 +130,10 @@ struct ReminderScheduleTests {
 
     @Test("Resetting the walk timer restores the full interval")
     func walkReset() {
-        var schedule = ReminderSchedule(settings: settings)
-        _ = schedule.advance(by: 90 * 60, settings: settings)
-        schedule.resetRegular(.walk, settings: settings)
-        #expect(schedule.walk.regularRemaining == settings.walkInterval)
+        var schedule = ReminderSchedule(settings: apart)
+        _ = schedule.advance(by: 90 * 60, settings: apart)
+        schedule.resetRegular(.walk, settings: apart)
+        #expect(schedule.walk.regularRemaining == apart.walkInterval)
         #expect(schedule.water.regularRemaining == 30 * 60)
     }
 
