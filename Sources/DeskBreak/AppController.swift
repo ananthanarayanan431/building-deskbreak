@@ -51,6 +51,8 @@ final class AppController: ObservableObject {
     /// Set while active time is being counted; the last instant already credited to the timers.
     private var lastTick: SuspendingClock.Instant?
     private var screenLocked = false
+    /// Wall-clock time the user left the desk, set while away or locked. Includes any sleep in between.
+    private var leftDeskAt: Date?
     private var wakeTask: Task<Void, Never>?
     private var started = false
 
@@ -229,14 +231,22 @@ final class AppController: ObservableObject {
         }
         guard newActivity != activity else { return }
 
-        let leavingDesk = activity == .active
+        let now = Date()
+        if activity == .active {
+            // Going idle means the user left when the last input arrived, not when the threshold passed.
+            let idleSince = newActivity == .away ? ActivityMonitor.secondsSinceLastInput() : 0
+            leftDeskAt = now.addingTimeInterval(-idleSince)
+        } else if newActivity == .active, let leftDeskAt {
+            // F7: only an absence long enough to be a real break restarts the walk timer.
+            let absence = now.timeIntervalSince(leftDeskAt)
+            if schedule.recordAbsence(absence, settings: settings) {
+                Log.scheduler.info("Away for \(Int(absence)) s, walk timer restarted")
+            }
+            self.leftDeskAt = nil
+        }
+
         activity = newActivity
         Log.scheduler.info("Activity changed to \(String(describing: newActivity), privacy: .public)")
-
-        // F7: being away already counts as a walk break, so the walk timer starts over.
-        if leavingDesk {
-            schedule.resetRegular(.walk, settings: settings)
-        }
     }
 
     private func scheduleWake() {

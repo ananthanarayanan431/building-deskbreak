@@ -4,7 +4,7 @@
 
 A small macOS menu bar app that reminds one person to **drink water every hour** and **walk every two hours** of *active* Mac time. Every reminder asks for an answer, and each one is logged as done, skipped or missed.
 
-- Only time spent working counts. Timers freeze while the Mac sleeps, and pause while the screen is locked or there has been no input for 15 minutes. After an idle break the walk timer starts over, because being away already counts as a break.
+- Only time spent working counts. Timers freeze while the Mac sleeps, and pause while the screen is locked or there has been no input for 15 minutes. After you have been away for at least the idle threshold (15 minutes), the walk timer starts over, because that absence already counts as a break. Locking the screen for a moment does not reset it.
 - Each reminder is a small silent panel in the top-right corner with **I did**, **Not doing** and **Remind me in 15 min** as buttons right underneath. It never takes keyboard focus. A snooze runs as its own timer and never moves the regular schedule.
 - The menu shows time to the next reminders and today's done-out-of-fired counts, plus **Pause for 1 hour** and **Resume now**.
 - Local only: no network access, no accounts, no analytics, no third-party dependencies.
@@ -102,7 +102,7 @@ Installing a build into `/Applications` (needed for launch at login) and updatin
 | Situation | Water timer | Walk timer |
 | --- | --- | --- |
 | Lid closed / Mac asleep | Freezes, resumes on wake | Freezes, resumes on wake |
-| Screen locked, or no input for the idle threshold (15 min) | Pauses, resumes on return | Resets to the full interval |
+| Screen locked, or no input for the idle threshold (15 min) | Pauses, resumes on return | Pauses; on return, resets to the full interval if you were away for at least the idle threshold |
 | "Pause for 1 hour" | Pauses, with any pending snooze | Pauses, with any pending snooze |
 
 - A regular timer restarts the moment its reminder fires, whatever the answer.

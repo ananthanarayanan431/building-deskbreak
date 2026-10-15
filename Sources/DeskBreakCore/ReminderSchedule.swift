@@ -138,6 +138,16 @@ public struct ReminderSchedule: Codable, Equatable, Sendable {
         separateRegularTimers()
     }
 
+    /// Called when the user is back at the desk. An absence of at least the idle threshold counts as
+    /// a walk break and restarts the walk timer (F7); a shorter one, such as locking the screen for a
+    /// few seconds, leaves it alone. Returns whether the absence counted.
+    @discardableResult
+    public mutating func recordAbsence(_ duration: TimeInterval, settings: ReminderSettings) -> Bool {
+        guard duration >= settings.idleThreshold else { return false }
+        resetRegular(.walk, settings: settings)
+        return true
+    }
+
     /// Removes a pending snooze and returns its record ID, if there was one.
     @discardableResult
     public mutating func cancelSnooze(_ kind: ReminderKind) -> UUID? {

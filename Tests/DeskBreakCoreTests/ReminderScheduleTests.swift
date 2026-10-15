@@ -137,6 +137,25 @@ struct ReminderScheduleTests {
         #expect(schedule.water.regularRemaining == 30 * 60)
     }
 
+    @Test("Locking the screen for a few seconds does not restart the walk timer")
+    func shortAbsenceKeepsWalkTimer() {
+        var schedule = ReminderSchedule(settings: apart)
+        _ = schedule.advance(by: 90 * 60, settings: apart)
+        let counted = schedule.recordAbsence(17, settings: apart)
+        #expect(!counted)
+        #expect(schedule.walk.regularRemaining == 60 * 60)
+    }
+
+    @Test("An absence as long as the idle threshold counts as a walk break")
+    func longAbsenceRestartsWalkTimer() {
+        var schedule = ReminderSchedule(settings: apart)
+        _ = schedule.advance(by: 90 * 60, settings: apart)
+        let counted = schedule.recordAbsence(apart.idleThreshold, settings: apart)
+        #expect(counted)
+        #expect(schedule.walk.regularRemaining == apart.walkInterval)
+        #expect(schedule.water.regularRemaining == 30 * 60)
+    }
+
     @Test("Shorter intervals clamp the remaining time")
     func adaptClamps() {
         var schedule = ReminderSchedule(settings: settings)

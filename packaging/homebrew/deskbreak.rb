@@ -1,16 +1,16 @@
 # Copy this file to the `homebrew-tap` repository as Formula/deskbreak.rb.
 #
 # Release steps:
-#   1. Bump VERSION in the app repo, commit, and tag it (git tag v1.0.0 && git push --tags).
+#   1. Bump VERSION in the app repo, commit, and tag it (git tag v1.0.1 && git push --tags).
 #   2. curl -L <url below> | shasum -a 256   and paste the result into sha256.
 #   3. Commit the formula to homebrew-tap.
 class Deskbreak < Formula
   desc "Menu bar reminders to drink water and walk, counted in active Mac time"
   homepage "https://github.com/ananthanarayanan431/deskbreak"
   license "MIT"
-  url "https://github.com/ananthanarayanan431/deskbreak/archive/refs/tags/v1.0.0.tar.gz"
+  url "https://github.com/ananthanarayanan431/deskbreak/archive/refs/tags/v1.0.1.tar.gz"
   sha256 "REPLACE_WITH_SHA256_OF_THE_TAGGED_TARBALL"
-  version "1.0.0"
+  version "1.0.1"
 
   depends_on macos: :ventura
 
